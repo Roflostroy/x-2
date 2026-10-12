@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCALE=4
+
 if [ "$#" -eq 3 ];
 then
     a="$1"
@@ -7,13 +9,13 @@ then
     c="$3"
 elif [ "$#" -eq 0 ];
 then
-    echo "Введи коэффициент a"
+    echo "Введи коэффициент a:"
     read a
 
-    echo "Введи коэффициент b"
+    echo "Введи коэффициент b:"
     read b
 
-    echo "Введи коэффициент c"
+    echo "Введи коэффициент c:"
     read c
 else
     echo "Ошибка: Нужно передать ровно 3 аргумента или не передавать вовсе!"
@@ -21,65 +23,52 @@ else
     exit 1
 fi
 
-if [[ ! "$a" =~ ^-?[0-9]+$ ]];
+NUM_REGEX="^-?[0-9]*\.?[0-9]+$"
+
+if [[ ! "$a" =~ $NUM_REGEX ]]; 
 then
-    echo "Недопустимый символ";
-    exit 1
+    echo "Ошибка: Коэффициент 'a' не является числом"; exit 1
 fi
 
-if [[ ! "$b" =~ ^-?[0-9]+$ ]];
+if [[ ! "$b" =~ $NUM_REGEX ]]; 
 then
-    echo "Недопустимый символ";
-    exit 1
+    echo "Ошибка: Коэффициент 'b' не является числом"; exit 1
 fi
 
-if [[ ! "$c" =~ ^-?[0-9]+$ ]];
+if [[ ! "$c" =~ $NUM_REGEX ]];
 then
-    echo "Недопустимый символ";
-    exit 1
+    echo "Ошибка: Коэффициент 'c' не является числом"; exit 1
 fi
 
-if [[ "$a" -eq 0 ]];
+if [ "$(echo "$a == 0" | bc -l)" -eq 1 ];
 then
     echo "Это не квадратное уравнение (a не должно быть равно 0)";
     exit 1
 fi
 
-d=$((b*b-4*a*c));
-echo "Дискриминант: $d";
+d=$(echo "scale=$SCALE; $b * $b - 4 * $a * $c" | bc -l)
+echo "Дискриминант: $d"
 
-if [[ "$d" -lt 0 ]];
-then
+if [ "$(echo "$d < 0" | bc -l)" -eq 1 ]; then
     echo "Корней нет (дискриминант меньше нуля)";
     exit 0
 fi
 
-s=-1;
-i=0;
-while [[ $((i*i)) -le $d ]];
-do
-    if [[ $((i*i)) -eq $d ]];
+s=$(echo "scale=$SCALE; sqrt($d)" | bc -l)
+
+if [ "$(echo "$d == 0" | bc -l)" -eq 1 ];
 then
-        s=$i;
-    fi
-    i=$((i+1));
-done
-
-if [[ "$s" -eq -1 ]]; then
-    echo "Ошибка: Дискриминант не является полным квадратом. Bash не умеет работать с дробными числами.";
-    exit 1
-fi
-
-if [[ "$d" -eq 0 ]]; then
-    x1=$(( (0 - b) / (2 * a) ));
-    echo "Дискриминант равен 0. Один корень:";
-    echo "x = $x1";
+    x1=$(echo "scale=$SCALE; (0 - $b) / (2 * $a)" | bc -l)
+    echo "Дискриминант равен 0. Один корень:"
+    echo "x = $x1"
 else
-    x1=$(( (0 - b + s) / (2 * a) ));
-    x2=$(( (0 - b - s) / (2 * a) ));
+    x1=$(echo "scale=$SCALE; (0 - $b + $s) / (2 * $a)" | bc -l)
+    x2=$(echo "scale=$SCALE; (0 - $b - $s) / (2 * $a)" | bc -l)
 
-    echo "x1 = $x1";
-    echo "x2 = $x2";
+    echo "x1 = $x1"
+    echo "x2 = $x2"
 fi
+
+exit 0
 
 exit 0
